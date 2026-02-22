@@ -1,5 +1,15 @@
 const asyncHandler = require('express-async-handler');
 const Product = require('../models/Product');
+const productsData = require('../data/products');
+
+// @desc    Seed products
+// @route   GET /api/products/seed
+// @access  Public
+const seedProducts = asyncHandler(async (req, res) => {
+    await Product.deleteMany({});
+    const createdProducts = await Product.insertMany(productsData);
+    res.json(createdProducts);
+});
 
 // @desc    Fetch all products
 // @route   GET /api/products
@@ -86,5 +96,6 @@ module.exports = {
     getProductById,
     createProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    seedProducts
 };

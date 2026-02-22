@@ -5,9 +5,12 @@ const {
     getProductById,
     createProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    seedProducts
 } = require('../controllers/productController');
 const { protect, admin } = require('../middleware/authMiddleware');
+
+router.route('/seed').get(seedProducts);
 
 router.route('/')
     .get(getProducts)

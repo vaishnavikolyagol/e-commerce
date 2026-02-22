@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - LuxeCart</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+
+<body>
+    <div id="navbar-container"></div>
+    <div id="toast-container"></div>
+
+    <main class="main-content container mt-5">
+        <h1 class="page-title">Checkout</h1>
+        <div class="checkout-container">
+            <form id="checkout-form" class="checkout-form">
+                <h2>Shipping Address</h2>
+                <div class="form-group">
+                    <label for="address">Address</label>
+                    <input type="text" id="address" required>
+                </div>
+                <div class="form-group">
+                    <label for="city">City</label>
+                    <input type="text" id="city" required>
+                </div>
+                <div class="form-group">
+                    <label for="postalCode">Postal Code</label>
+                    <input type="text" id="postalCode" required>
+                </div>
+                <div class="form-group">
+                    <label for="country">Country</label>
+                    <input type="text" id="country" required>
+                </div>
+
+                <h2>Payment Method</h2>
+                <div class="form-group">
+                    <label>
+                        <input type="radio" name="paymentMethod" value="Razorpay" checked>
+                        Razorpay (Card, UPI, NetBanking)
+                    </label>
+                </div>
+            </form>
+
+            <div class="cart-summary">
+                <h3>Order Summary</h3>
+                <div id="checkout-items" class="checkout-items"></div>
+                <hr>
+                <div class="summary-line">
+                    <span>Items Total:</span>
+                    <span id="items-price">₹0.00</span>
+                </div>
+                <div class="summary-line">
+                    <span>Shipping:</span>
+                    <span id="shipping-price">₹0.00</span>
+                </div>
+                <div class="summary-line">
+                    <span>Tax (18%):</span>
+                    <span id="tax-price">₹0.00</span>
+                </div>
+                <div class="summary-line total-line">
+                    <span>Total:</span>
+                    <span id="total-price">₹0.00</span>
+                </div>
+                <button type="button" class="btn btn-primary btn-block mt-3" id="place-order-btn"
+                    onclick="placeOrder()">Place Order & Pay</button>
+            </div>
+        </div>
+    </main>
+
+    <div id="footer-container"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        let orderCart = null;
+        let pricing = {};
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!isAuthenticated()) {
+                window.location.href = 'login.html';
+                return;
+            }
+            try {
+                const response = await apiFetch('/cart', 'GET');
+                if (!response.cartItems || response.cartItems.length === 0) {
+                    window.location.href = 'cart.html';
+                    return;
+                }
+                orderCart = response;
+                renderOrderSummary(orderCart.cartItems);
+            } catch (error) {
+                showToast('Error loading cart', 'error');
+            }
+        });
+
+        function renderOrderSummary(items) {
+            const itemsContainer = document.getElementById('checkout-items');
+            itemsContainer.innerHTML = items.map(item => `
+                <div class="checkout-item">
+                    <span>${item.qty} x ${item.name}</span>
+                    <span>₹${(item.price * item.qty).toFixed(2)}</span>
+                </div>
+            `).join('');
+
+            const itemsPrice = items.reduce((acc, item) => acc + item.price * item.qty, 0);
+            const shippingPrice = itemsPrice > 5000 ? 0 : 100;
+            const taxPrice = Number((0.18 * itemsPrice).toFixed(2));
+            const totalPrice = itemsPrice + shippingPrice + taxPrice;
+
+            pricing = { itemsPrice, shippingPrice, taxPrice, MathRoundTotalPrice: Math.round(totalPrice) };
+
+            document.getElementById('items-price').innerText = `₹${itemsPrice.toFixed(2)}`;
+            document.getElementById('shipping-price').innerText = `₹${shippingPrice.toFixed(2)}`;
+            document.getElementById('tax-price').innerText = `₹${taxPrice.toFixed(2)}`;
+            document.getElementById('total-price').innerText = `₹${totalPrice.toFixed(2)}`;
+        }
+
+        async function placeOrder() {
+            const address = document.getElementById('address').value;
+            const city = document.getElementById('city').value;
+            const postalCode = document.getElementById('postalCode').value;
+            const country = document.getElementById('country').value;
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+
+            if (!address || !city || !postalCode || !country) {
+                showToast('Please fill all shipping details', 'error');
+                return;
+            }
+
+            try {
+                // 1. Create Order in backend
+                const orderData = {
+                    orderItems: orderCart.cartItems,
+                    shippingAddress: { address, city, postalCode, country },
+                    paymentMethod,
+                    itemsPrice: pricing.itemsPrice,
+                    taxPrice: pricing.taxPrice,
+                    shippingPrice: pricing.shippingPrice,
+                    totalPrice: pricing.MathRoundTotalPrice
+                };
+
+                const order = await apiFetch('/orders', 'POST', orderData);
+
+                // 2. Create Razorpay order
+                const razorpayOrder = await apiFetch(`/orders/${order._id}/pay`, 'POST');
+
+                // 3. Open Razorpay Checkout
+                const options = {
+                    key: "test_key_id", // Replace with your actual key or load from backend
+                    amount: razorpayOrder.amount,
+                    currency: razorpayOrder.currency,
+                    name: "LuxeCart",
+                    description: "Order Payment",
+                    order_id: razorpayOrder.id,
+                    handler: async function (response) {
+                        try {
+                            const verifyRes = await apiFetch(`/orders/${order._id}/verify`, 'POST', {
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature
+                            });
+                            showToast('Payment successful!', 'success');
+                            // Clear cart
+                            await apiFetch('/cart', 'DELETE');
+                            setTimeout(() => {
+                                window.location.href = 'index.html';
+                            }, 2000);
+                        } catch (err) {
+                            showToast('Payment verification failed', 'error');
+                        }
+                    },
+                    prefill: {
+                        name: getUser().name,
+                        email: getUser().email,
+                    },
+                    theme: {
+                        color: "#0f172a"
+                    }
+                };
+                const rzp = new Razorpay(options);
+                rzp.open();
+            } catch (error) {
+                showToast(error.message || 'Error placing order', 'error');
+            }
+        }
+    </script>
+</body>
+
+</html>

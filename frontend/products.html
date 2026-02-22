@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products - LuxeCart</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="navbar-container"></div>
+    <div id="toast-container"></div>
+
+    <main class="main-content container mt-5">
+        <h1 class="page-title">All Products</h1>
+        <div id="products-list" class="products-grid">
+            <div class="loader"></div>
+        </div>
+    </main>
+
+    <div id="footer-container"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const container = document.getElementById('products-list');
+            try {
+                const products = await fetchProducts();
+                displayProducts(products, container);
+            } catch (error) {
+                container.innerHTML = `<p class="error-msg">Failed to load products.</p>`;
+            }
+        });
+    </script>
+</body>
+
+</html>

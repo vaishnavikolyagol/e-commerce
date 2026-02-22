@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LuxeCart - Premium E-Commerce</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar Container -->
+    <div id="navbar-container"></div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Elevate Your Lifestyle</h1>
+                <p>Discover our curated collection of premium products designed for modern living.</p>
+                <a href="products.html" class="btn btn-primary">Shop Now</a>
+            </div>
+            <div class="hero-image">
+                <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80" alt="E-Commerce Hero">
+            </div>
+        </section>
+
+        <!-- Featured Products -->
+        <section class="container mt-5">
+            <h2 class="section-title">Featured Products</h2>
+            <div id="featured-products" class="products-grid">
+                <div class="loader"></div> <!-- Loading spinner -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer Container -->
+    <div id="footer-container"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const container = document.getElementById('featured-products');
+            try {
+                const products = await fetchProducts();
+                displayProducts(products.slice(0, 4), container); // display top 4
+            } catch (error) {
+                container.innerHTML = `<p class="error-msg">Failed to load products. Please try again later.</p>`;
+            }
+        });
+    </script>
+</body>
+</html>

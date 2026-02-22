@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart - LuxeCart</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="navbar-container"></div>
+    <div id="toast-container"></div>
+
+    <main class="main-content container mt-5">
+        <h1 class="page-title">Shopping Cart</h1>
+        <div class="cart-container">
+            <div id="cart-items" class="cart-items-list">
+                <div class="loader"></div>
+            </div>
+            <div class="cart-summary" id="cart-summary" style="display: none;">
+                <h3>Order Summary</h3>
+                <div class="summary-line">
+                    <span>Subtotal (<span id="cart-count">0</span> items)</span>
+                    <span id="cart-subtotal">₹0.00</span>
+                </div>
+                <button class="btn btn-primary btn-block mt-3" onclick="proceedToCheckout()">Proceed to
+                    Checkout</button>
+            </div>
+        </div>
+    </main>
+
+    <div id="footer-container"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!isAuthenticated()) {
+                window.location.href = 'login.html';
+                return;
+            }
+            await renderCart();
+        });
+
+        function proceedToCheckout() {
+            window.location.href = 'checkout.html';
+        }
+    </script>
+</body>
+
+</html>

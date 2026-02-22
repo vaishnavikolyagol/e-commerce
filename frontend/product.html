@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details - LuxeCart</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="navbar-container"></div>
+    <div id="toast-container"></div>
+
+    <main class="main-content container mt-5">
+        <div id="product-details" class="product-details-container">
+            <div class="loader"></div>
+        </div>
+    </main>
+
+    <div id="footer-container"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = urlParams.get('id');
+            const container = document.getElementById('product-details');
+
+            if (!productId) {
+                container.innerHTML = `<p class="error-msg">Product not found.</p>`;
+                return;
+            }
+
+            try {
+                const product = await fetchProductById(productId);
+
+                container.innerHTML = `
+                    <div class="product-image-wrapper">
+                        <img src="${product.image}" alt="${product.name}" class="product-image-large">
+                    </div>
+                    <div class="product-info-wrapper">
+                        <h1 class="product-title-large">${product.name}</h1>
+                        <p class="product-price-large">₹${product.price.toFixed(2)}</p>
+                        <p class="product-description">${product.description}</p>
+                        <div class="product-meta">
+                            <span class="stock-status ${product.countInStock > 0 ? 'in-stock' : 'out-of-stock'}">
+                                ${product.countInStock > 0 ? 'In Stock' : 'Out of Stock'}
+                            </span>
+                            <span class="category-badge">${product.category}</span>
+                        </div>
+                        ${product.countInStock > 0 ? `
+                            <div class="add-to-cart-action">
+                                <label for="qty">Quantity:</label>
+                                <select id="qty" class="qty-select">
+                                    ${[...Array(product.countInStock).keys()].map(x => `<option value="${x + 1}">${x + 1}</option>`).join('')}
+                                </select>
+                                <button id="add-to-cart-btn" class="btn btn-primary btn-block mt-3" onclick="addToCartHandler('${product._id}', '${product.name}', '${product.image}', ${product.price})">Add to Cart</button>
+                            </div>
+                        ` : `
+                            <button class="btn btn-disabled btn-block mt-3" disabled>Out of Stock</button>
+                        `}
+                    </div>
+                `;
+            } catch (error) {
+                container.innerHTML = `<p class="error-msg">Failed to load product details.</p>`;
+            }
+        });
+    </script>
+</body>
+
+</html>

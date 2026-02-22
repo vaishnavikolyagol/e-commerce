@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://e-commerce-r241.onrender.com/api';
 // Once deployed, change to deployed URL, e.g. 'https://your-backend.onrender.com/api'
 
 async function apiFetch(endpoint, method = 'GET', body = null) {
